@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ddgs": {
+      "command": "/opt/venv/bin/python3",
+      "args": ["/workspace/ddgs-mcp-server.py"]
+    }
+  }
+}

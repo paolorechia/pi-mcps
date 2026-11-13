@@ -1,0 +1,54 @@
+# docker-compose.yml
+# Spin up Pi + LLM server (Splash/any OpenAI-compatible API)
+# Usage: docker compose up -d && docker compose exec pi pi
+#
+# Two modes:
+#   MODE 1: Splash runs on your host → uncomment models.json mount below
+#   MODE 2: Splash runs in compose   → leave models baked in (splash:8000)
+
+services:
+  # ── Splash LLM server ──────────────────────────────────────────
+  # Run Splash here (MODE 2) or skip and let Pi connect to your host
+  # (MODE 1). Uncomment below for MODE 2.
+  #
+  # splash:
+  #   image: ghcr.io/unsloth/unsloth:latest
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - HF_TOKEN=${HF_TOKEN:-}
+  #   volumes:
+  #     - splash-cache:/root/.cache
+
+  # ── Pi coding agent ────────────────────────────────────────────
+  pi:
+    build: .
+    ports:
+      - "6942:6942"
+    volumes:
+      - .:/workspace
+
+      # Agent home persists sessions, MCP config, extensions across runs
+      - pi-agent-home:/root/.pi/agent
+
+      # ═══ MODE 1: Splash on the host ═══
+      # Uncomment to mount a local models.json pointing to host.docker.internal:8000
+      # - ./models-host.json:/root/.pi/agent/models.json:ro
+      #
+      # ═══ MODE 2: Splash in compose ═══
+      # Uncomment below and comment the MODE 1 mount above.
+      # Pi will use the baked-in models-compose.json → http://splash:8000/v1
+      # - ./models-compose.json:/root/.pi/agent/models.json:ro
+
+      # Override the MCP server script at runtime (if you want a dev version)
+      # - ./ddgs-mcp-server.py:/workspace/ddgs-mcp-server.py:ro
+
+    depends_on:
+      # splash:                         # uncomment for MODE 2
+      #   condition: service_healthy     # or service_started
+    # Pass CLI flags (model selection, etc.)
+    # command: ["pi", "--model", "splash/Qwen3.6-35B-A3B-GGUF:UD-Q2_K_XL"]
+
+volumes:
+  pi-agent-home:              # ~/.pi/agent persistence
+  splash-cache:               # Splash model weights cache

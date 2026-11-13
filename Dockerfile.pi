@@ -1,0 +1,54 @@
+FROM node:24-bookworm-slim
+
+# Install system deps + curl + build tools
+# python3-venv is required for `uv venv` on Debian
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends bash ca-certificates git ripgrep python3 python3-venv python3-pip curl build-essential \
+  && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip to the latest possible version (one-time system-level op;
+# we never use bare pip after this — all installs happen in venvs via uv)
+RUN pip install --upgrade --break-system-packages pip
+
+# Install gh CLI (GitHub CLI for SSO-authenticated pushes)
+# aarch64/arm64 (Raspberry Pi, AWS Graviton, etc.)
+RUN curl -fsSL "https://github.com/cli/cli/releases/download/v2.68.0/gh_2.68.0_linux_arm64.deb" -o /tmp/gh.deb \
+  && dpkg -i /tmp/gh.deb \
+  && rm /tmp/gh.deb
+
+# Install uv (fast Python package manager)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:${PATH}"
+
+# --- Python virtual environment ---
+# Create an isolated venv with uv using the system python3.11
+RUN uv venv /opt/venv --python python3.11
+# Prepend the venv so `python3`, `pip`, etc. resolve inside it.
+# uv pip install will auto-detect the active venv from PATH.
+ENV PATH="/opt/venv/bin:${PATH}"
+
+# Bake MCP server deps into the venv (ddgs + mcp server lib)
+RUN uv pip install ddgs mcp
+
+# --- Bake app files ---
+# MCP server script (baked in so it's available even if /workspace is empty)
+COPY ddgs-mcp-server.py /workspace/ddgs-mcp-server.py
+
+# --- Bake config into the image ---
+# models-host.json → Splash on the host (host.docker.internal:8000)
+COPY models-host.json /root/.pi/agent/models-host.json
+
+# models-compose.json → Splash in compose (splash:8000)
+COPY models-compose.json /root/.pi/agent/models-compose.json
+
+# Default models.json → points to host by default
+COPY models-host.json /root/.pi/agent/models.json
+
+# mcp.json (the MCP servers baked in)
+COPY mcp.json /root/.pi/agent/mcp.json
+
+# Install Pi
+RUN npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+
+WORKDIR /workspace
+CMD ["pi"]
