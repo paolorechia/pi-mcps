@@ -31,8 +31,8 @@ ENV PATH="/opt/venv/bin:${PATH}"
 RUN uv pip install ddgs mcp
 
 # --- Bake app files ---
-# MCP server script (baked in so it's available even if /workspace is empty)
-COPY ddgs-mcp-server.py /workspace/ddgs-mcp-server.py
+# MCP server script (baked in at /opt/ so it survives /workspace mounts)
+COPY ddgs-mcp-server.py /opt/ddgs-mcp-server.py
 
 # --- Bake config into the image ---
 # models-host.json → Splash on the host (host.docker.internal:8000)
