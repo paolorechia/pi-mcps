@@ -7,7 +7,7 @@ Docker container for running [Pi coding agent](https://pi.dev/) with DuckDuckGo 
 Add this alias to your `~/.zshrc` or `~/.bashrc`:
 
 ```bash
-alias pi-docker='docker run --rm -it -v "$PWD:/workspace" pi-mcps-pi'
+alias pi-docker='docker run --rm -it -v "$PWD:/workspace" -v pi-agent-home:/root/.pi/agent pi-mcps-pi'
 ```
 
 Then use it:
