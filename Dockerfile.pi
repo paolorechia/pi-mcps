@@ -44,8 +44,8 @@ COPY models-compose.json /root/.pi/agent/models-compose.json
 # Default models.json → points to host by default
 COPY models-host.json /root/.pi/agent/models.json
 
-# mcp.json (the MCP servers baked in)
-COPY mcp.json /root/.pi/agent/mcp.json
+# mcp-container.json → MCP servers baked in with container paths
+COPY mcp-container.json /root/.pi/agent/mcp.json
 
 # Install Pi
 RUN npm install -g --ignore-scripts @earendil-works/pi-coding-agent

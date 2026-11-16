@@ -22,9 +22,13 @@ services:
 
   # ── Pi coding agent ────────────────────────────────────────────
   pi:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.pi
     ports:
       - "6942:6942"
+    stdin_open: true
+    tty: true
     volumes:
       - .:/workspace
 
@@ -42,10 +46,11 @@ services:
 
       # Override the MCP server script at runtime (if you want a dev version)
       # - ./ddgs-mcp-server.py:/workspace/ddgs-mcp-server.py:ro
+      #
+      # Override MCP config (ddgs search is baked in by default with direct exposure)
+      # - ./mcp.json:/root/.pi/agent/mcp.json:ro
 
-    depends_on:
-      # splash:                         # uncomment for MODE 2
-      #   condition: service_healthy     # or service_started
+    # depends_on:                     # uncomment for MODE 2
     # Pass CLI flags (model selection, etc.)
     # command: ["pi", "--model", "splash/Qwen3.6-35B-A3B-GGUF:UD-Q2_K_XL"]
 
